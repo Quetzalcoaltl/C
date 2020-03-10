@@ -1,0 +1,115 @@
+/*
+ projeto do guia dois, aula 4
+ */ 
+
+#define _USE_LCD_I2C_RGB		// é neccessario que essa inclusão seja a primeira, display RGB, quando não for esse é só tirar
+#define F_CPU 16000000ul		// definir a velocidade de clock do sistema
+#include <avr/io.h>			// por definição a terceira inclusão, arquivo de criaçao para utilzar o ATMEGA328P(relações de conexão de portas e registros do microcontrolador) AVR--chip
+#include <util/delay.h>		// bibliotexa de delay, 
+#include <LCD_app_hk.h>		// ????
+#define VREF 512			// definção da metade da escala
+unsigned int Le_AD(char); 		// prototipo da funcao Le_AD
+int hora =0;
+int min=0;
+int segundo=0;
+
+
+int main(void)
+{
+	 unsigned int result;	     // vai receber resultado do conversor AD
+	 DDRD = _BV(DDB4);		     // função existente no atmel, DDB4>> valor definido é 4
+					// #define _BV(x) (1<<x) desloacamento de bit,
+					// objetivo dessa função é colocar um bit no valor definido, no caso 4: 0000 0001 > 0001 0000
+	 init_dsp(2, 16);    	     // alteração de Init para init, esta determinando o tipo de display, 2 linhas e 16 elementos
+	 putmessage(0,-1,"relogio, "); // mensagem de texto no display, na primeira linha a partir da segunda coluna. nota: 0,-1>> coloca a mensagem centrada
+	 //putmessage(1,-1,"asfvasdg "); // parecido com de cima
+	 for(;;) 
+	 { 
+		 result = Le_AD(0);			// canal que estamos utilizando, lendo valor cru que esta em AD0,
+			
+		 if (result > VREF)			//comparação para ver se esta na metade da resolução
+		{
+			PORTD |= _BV(PORTD4);	// ou de portD com leitura em _BV, seta o bit(quarto) da porta 
+		}
+		 else
+	 
+	 		PORTD &= ~_BV(PORTD4);	//reseta o bit
+			 putnumber_i(1,12,result,4);	//imprimir um valor numerico inteiro, segunda linha a partir da coluna 12, quatro digitos
+						//putnumber_f para imprimir um ponto flutuante
+		 _delay_ms(200); 
+	} 
+
+
+
+loop: do{
+	if hora >=24:
+		hora=0;
+	if min >= 60:
+		min =0;
+		hora++;
+	if segundo >=60:
+		segundo=0;
+		min++;
+	segundo++;
+	_delay_ms(1000);
+	//colocar a imagem no display, 
+}while(!B1)
+
+	// posso fazer com clique, ou posso fazer com tempo segurando o botão, partiularmente acho melhor da seguinte forma: 
+	// um clique entra no modo de modificação. é possivel modificar os segundos, e os min e as horas
+	// dois cliques: 	segundos,
+	// tres cliques: 	minutos,
+	// quatro cliques: 	horas 
+	// melhor dizendo, a cada clique ele vai para o proximo, e fica assim até que o sistena regustre o botão de off, 
+	
+for(;;)
+{
+	_delay_ms(200);
+	// logica para incrementar segundos e 
+	
+	//if (B2): goto loop;
+	if (B1):
+	{
+		_delay_ms(200);
+		for(;;)
+		{
+			// logica para incrementar minutos-
+			minutos= int((60*result)/1023) 
+	//		if (B2): goto loop;
+			if (B1):
+			{
+				_delay_ms(200);
+				for(;;)
+				{
+					_delay_ms(200);
+					// logica para incrementar horas
+					horas=int((24*result)/1023);
+					if (B1){goto loop;}
+	//				if (B2): goto loop;
+				}
+			}
+		}
+	}
+}
+}  
+TRUE 
+true /
+
+unsigned int Le_AD(char channel)
+{ 
+	static char FirstTime=1; 
+	
+	if (FirstTime) 
+	{ 
+		FirstTime = 0; 
+		ADMUX = _BV(REFS0); // Seleciona Vref igual a 5V 
+		ADCSRA = _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);// habilita AD, preesc de 128 ; cada bit é um registro, dessa forma o _BV coloca um bit na exat posição do registro
+	} 
+	DIDR0 = 1<<channel; // Liga a entrada analogica no pino PC0 e desliga a funcao digital 
+	ADMUX &= 0xF0;
+	ADMUX |= channel; 
+	ADCSRA |= _BV(ADSC); // dispara o conversor 
+	while (!(ADCSRA & _BV(ADIF))) // espera finalizar a conversao 
+		continue; 
+	return (ADC); //devolve o resultado da conversao 
+}
